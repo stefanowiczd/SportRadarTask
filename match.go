@@ -1,5 +1,18 @@
 package main
 
+const (
+	EventUnknown          = 0
+	EventStartMatch       = 1
+	EventStopMatch        = 2
+	EventUpdateMatchScore = 3
+)
+
+// MatchEvent represents a match event, like start match, update score or finish game.
+type MatchEvent struct {
+	Type int
+	Match
+}
+
 type Match struct {
 	HomeTeam      string
 	AwayTeam      string
@@ -16,12 +29,4 @@ func NewMatch(ht, at string, hts, ats, id int) Match {
 		AwayTeamScore: ats,
 		ReferenceID:   id,
 	}
-}
-
-func (m Match) HomeTeamScoreUpdate() {
-	m.HomeTeamScore += 1
-}
-
-func (m Match) AwayTeamScoreUpdate() {
-	m.AwayTeamScore += 1
 }
