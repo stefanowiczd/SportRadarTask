@@ -11,6 +11,22 @@ import (
 	"time"
 )
 
+func scheduler(ctx context.Context, cf context.CancelFunc, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	var done bool
+	for !done {
+		select {
+		case <-ctx.Done():
+			done = true
+		case <-time.After(time.Second * 3):
+			done = true
+		}
+	}
+
+	cf()
+}
+
 func run(ctx context.Context) {
 	waitGroup := &sync.WaitGroup{}
 	ctx, cancel := context.WithCancel(ctx)
@@ -28,16 +44,11 @@ func run(ctx context.Context) {
 
 	waitGroup.Add(1)
 
-	go func(wg *sync.WaitGroup) {
-		defer wg.Done()
-
-		time.Sleep(5 * time.Second)
-
-		cancel()
-
-	}(waitGroup)
+	go scheduler(ctx, cancel, waitGroup)
 
 	<-ctx.Done()
+
+	waitGroup.Wait()
 }
 
 func main() {
