@@ -1,6 +1,8 @@
 package main
 
-import "math/rand/v2"
+import (
+	"math/rand/v2"
+)
 
 // teams represents a fixed set of 32 countries taking part in the World Cup.
 var teams = [32]string{
@@ -40,12 +42,9 @@ var teams = [32]string{
 
 // mixOrder is a helper function capable of mixing order an array's objects.
 func mixOrder(t [32]string) [32]string {
-	for i := 0; i < len(t)-1; i++ {
-		team := t[i]
-		swapIndex := randRange(0, len(t))
-		swappedTeam := teams[swapIndex]
-		t[i] = swappedTeam
-		t[swapIndex] = team
+	for i := range t {
+		j := rand.IntN(i + 1)
+		t[i], t[j] = t[j], t[i]
 	}
 
 	return t
