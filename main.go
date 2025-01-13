@@ -15,8 +15,9 @@ import (
 func match(ctx context.Context, wg *sync.WaitGroup, eventChannel chan MatchEvent, m Match) {
 	defer wg.Done()
 
-	tickerTimeout := time.NewTicker(5 * time.Second)
-	tickerEvent := time.NewTicker(time.Second)
+	// Two timeouts to simulate of played match
+	tickerTimeout := time.NewTicker(5 * time.Second) // How long it will take
+	tickerEvent := time.NewTicker(time.Second)       // When the decision about action will be taken (scored goal or no goal)
 
 	eventChannel <- MatchEvent{
 		Type:  EventStartMatch,
@@ -31,7 +32,15 @@ func match(ctx context.Context, wg *sync.WaitGroup, eventChannel chan MatchEvent
 		case <-ctx.Done():
 			done = true
 		case <-tickerEvent.C:
-			homeTeamScore += 1 // TODO - add some logic about random scoring by each team.
+			// Pseudo logic to fake action of scoring a goal by home or away team, or no goal.
+			if randRange(0, 4)%3 == 0 { // No goal was scored, do not send event.
+				continue
+			} else if randRange(0, 4)%3 == 1 {
+				homeTeamScore += 1 // Goal scored by home team.
+			} else {
+				awayTeamScore += 1 // Goal scored by away team.
+			}
+
 			eventChannel <- MatchEvent{
 				Type: EventUpdateMatchScore,
 				Match: Match{
@@ -62,7 +71,8 @@ func match(ctx context.Context, wg *sync.WaitGroup, eventChannel chan MatchEvent
 func board(ctx context.Context, cf context.CancelFunc, wg *sync.WaitGroup, eventChannel chan MatchEvent) {
 	defer wg.Done()
 
-	tickerTimeout := time.NewTicker(5 * time.Second)
+	scoreBoard := NewScoreBoard()
+	tickerTimeout := time.NewTicker(15 * time.Second)
 
 	var done bool
 	for !done {
@@ -70,12 +80,26 @@ func board(ctx context.Context, cf context.CancelFunc, wg *sync.WaitGroup, event
 		case <-ctx.Done():
 			done = true
 		case e, _ := <-eventChannel: // TODO - add recognizing if channel if closed.
-			fmt.Printf("got event: %v\n", e)
+			switch e.Type {
+			case EventStartMatch:
+				scoreBoard.StartMatch(e.Match)
+			case EventUpdateMatchScore:
+				if err := scoreBoard.UpdateMatchScore(e.Match); err != nil {
+					slog.ErrorContext(ctx, "Can not process received event", slog.Any("error", err), slog.Any("match", e.Match))
+				}
+			case EventStopMatch:
+				scoreBoard.StopMatch(e.Match)
+			default:
+				slog.ErrorContext(ctx, "Unknown event", slog.Int("event_value", e.Type))
+			}
 		case <-tickerTimeout.C:
 			done = true
 		}
 	}
 
+	scoreBoard.Summary()
+
+	// Only board should be able to realize cancel function since it has to wait until finish of all matches.
 	cf()
 }
 
@@ -95,29 +119,22 @@ func run(ctx context.Context) {
 	}()
 
 	waitGroup.Add(1)
-	waitGroup.Add(1)
-	waitGroup.Add(1)
-
 	eventChannel := make(chan MatchEvent, 64)
-
-	m := Match{
-		HomeTeam:      "Poland",
-		AwayTeam:      "England",
-		HomeTeamScore: 0,
-		AwayTeamScore: 0,
-		ReferenceID:   1,
-	}
-	m2 := Match{
-		HomeTeam:      "Mexico",
-		AwayTeam:      "Qatar",
-		HomeTeamScore: 0,
-		AwayTeamScore: 0,
-		ReferenceID:   2,
-	}
-
 	go board(ctx, cancel, waitGroup, eventChannel)
-	go match(ctx, waitGroup, eventChannel, m)
-	go match(ctx, waitGroup, eventChannel, m2)
+
+	teamsWorldCup := mixOrder(teams)
+
+	for i, j := 0, 0; i <= len(teamsWorldCup)-1; i, j = i+2, j+1 {
+		m := Match{
+			HomeTeam:    teamsWorldCup[i],
+			AwayTeam:    teamsWorldCup[i+1],
+			ReferenceID: j,
+		}
+
+		waitGroup.Add(1)
+
+		go match(ctx, waitGroup, eventChannel, m)
+	}
 
 	<-ctx.Done()
 
@@ -127,7 +144,7 @@ func run(ctx context.Context) {
 func main() {
 	ctx := context.Background()
 
-	fmt.Println("Hello Sport Radar :)")
+	fmt.Print("Hello Sport Radar :)\n\n")
 
 	run(ctx)
 }

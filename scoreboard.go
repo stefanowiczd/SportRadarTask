@@ -37,3 +37,13 @@ func (s *ScoreBoard) UpdateMatchScore(m Match) error {
 
 	return nil
 }
+
+func (s *ScoreBoard) Summary() {
+	summary := s.Results
+	for i := range summary {
+		fmt.Printf(
+			"%12s %d - %d %12s\n",
+			summary[i].HomeTeam, summary[i].HomeTeamScore, summary[i].AwayTeamScore, summary[i].AwayTeam,
+		)
+	}
+}
