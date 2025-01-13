@@ -46,4 +46,6 @@ func (s *ScoreBoard) Summary() {
 			summary[i].HomeTeam, summary[i].HomeTeamScore, summary[i].AwayTeamScore, summary[i].AwayTeam,
 		)
 	}
+
+	fmt.Println()
 }

@@ -144,7 +144,9 @@ func run(ctx context.Context) {
 func main() {
 	ctx := context.Background()
 
-	fmt.Print("Hello Sport Radar :)\n\n")
+	fmt.Printf("\nHello Sport Radar :)\n")
+
+	fmt.Printf("\nThe tournament has just started...\n\n")
 
 	run(ctx)
 }
