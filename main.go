@@ -97,6 +97,8 @@ func board(ctx context.Context, cf context.CancelFunc, wg *sync.WaitGroup, event
 		}
 	}
 
+	scoreBoard.SortResult() // Sort result by the sum of scored goals.
+
 	scoreBoard.Summary()
 
 	// Only board should be able to realize cancel function since it has to wait until finish of all matches.

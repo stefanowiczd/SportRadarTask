@@ -3,14 +3,28 @@ package main
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"sync"
 )
 
 var errItemNotFound = errors.New("item not found")
 
+type Results []Match
+
+func (r Results) Swap(i, j int) {
+	r[i], r[j] = r[j], r[i]
+}
+
+func (r Results) Len() int {
+	return len(r)
+}
+func (r Results) Less(i, j int) bool {
+	return r[i].HomeTeamScore+r[i].AwayTeamScore > r[j].HomeTeamScore+r[j].AwayTeamScore
+}
+
 type ScoreBoard struct {
 	OngoingGames sync.Map
-	Results      []Match
+	Results
 }
 
 func NewScoreBoard() *ScoreBoard {
@@ -38,6 +52,12 @@ func (s *ScoreBoard) UpdateMatchScore(m Match) error {
 	return nil
 }
 
+// SortResult sorts result by the sum of scored goals.
+func (s *ScoreBoard) SortResult() {
+	sort.Sort(s.Results)
+}
+
+// Summary prints the result in user-friendly form.
 func (s *ScoreBoard) Summary() {
 	summary := s.Results
 	for i := range summary {
