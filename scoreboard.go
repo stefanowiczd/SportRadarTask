@@ -19,7 +19,7 @@ func (r Results) Len() int {
 	return len(r)
 }
 func (r Results) Less(i, j int) bool {
-	return r[i].HomeTeamScore+r[i].AwayTeamScore > r[j].HomeTeamScore+r[j].AwayTeamScore
+	return r[i].HomeTeamScore+r[i].AwayTeamScore >= r[j].HomeTeamScore+r[j].AwayTeamScore
 }
 
 type ScoreBoard struct {
