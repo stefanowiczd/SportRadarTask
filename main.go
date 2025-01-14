@@ -16,7 +16,7 @@ func match(ctx context.Context, wg *sync.WaitGroup, eventChannel chan MatchEvent
 	defer wg.Done()
 
 	// Two timeouts to simulate of played match
-	tickerTimeout := time.NewTicker(5 * time.Second) // How long it will take
+	tickerTimeout := time.NewTicker(6 * time.Second) // How long it will take
 	tickerEvent := time.NewTicker(time.Second)       // When the decision about action will be taken (scored goal or no goal)
 
 	eventChannel <- MatchEvent{
@@ -72,7 +72,7 @@ func board(ctx context.Context, cf context.CancelFunc, wg *sync.WaitGroup, event
 	defer wg.Done()
 
 	scoreBoard := NewScoreBoard()
-	tickerTimeout := time.NewTicker(15 * time.Second)
+	tickerTimeout := time.NewTicker(7 * time.Second)
 
 	var done bool
 	for !done {
